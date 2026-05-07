@@ -13,22 +13,20 @@ A machine learning-powered web application that predicts electricity demand for 
 
 ## 📁 Project Structure
 
-
 ├── electricity-demand/
-│   ├── frontend/                               # React application
-│   └── backend/                                # Flask API server
+│   ├── frontend/                                  # React frontend application
+│   └── backend/                                   # Flask backend API server
 │
-├── DataSet_Training/                           # Model training, analysis & data fetching scripts
-│   ├── Training-80-20-Final.ipynb              # Code to train and test and save models
-│   ├── FullDataTrainingFinal.ipynb             # Code to train on full available data
-│   ├── WEATHER DATA FETCH AND CONVERSION.ipynb # Scripts to fetch weather and save it in csv
-│   ├── SLDC DATA FETCH.ipynb                   # Scripts to fetch electricty and save it in csv
-│   ├── Delhi_Weather_5M.csv                    # fetched weather data
-│   ├── delhi_sldc_5min_2022_2026.csv           # fetched elect demand
-│   ├── .        
-│   └── .
+├── DataSet_Training/                              # Data collection, preprocessing, training & analysis
+│   ├── Training-80-20-Final.ipynb                 # Train/test split training and model evaluation
+│   ├── FullDataTrainingFinal.ipynb                # Final training on complete dataset
+│   ├── WEATHER DATA FETCH AND CONVERSION.ipynb    # Fetch and preprocess weather data
+│   ├── SLDC DATA FETCH.ipynb                      # Fetch Delhi electricity demand data
+│   ├── Delhi_Weather_5M.csv                       # Processed weather dataset
+│   ├── delhi_sldc_5min_2022_2026.csv              # Electricity demand dataset
+│   └── ...
 │
-└── .python-version        # Python 3.11 (for CatBoost compatibility)
+└── .python-version                                # Python 3.11 (CatBoost compatibility)
 
 
 ---
@@ -44,7 +42,7 @@ The prediction system uses an *ensemble approach* combining multiple models with
 | CatBoos |
 | Ensemble is used with evaluated weight of each model |
 
-> For specific model details and ensemble weights, visit the [live demo](https://power-demand-fi6iq210t-suhani-01s-projects.vercel.app/about).
+> For specific model details and ensemble weights, visit the [live demo](https://power-demand-fi6iq210t-suhani-01s-projects.vercel.app/).
 
 ---
 
@@ -93,3 +91,5 @@ npm run dev
 
 
 The frontend will start on http://localhost:5173
+
+# Thank You
