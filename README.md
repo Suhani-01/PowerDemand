@@ -18,16 +18,15 @@ A machine learning-powered web application that predicts electricity demand for 
 │   └── backend/                                   # Flask backend API server
 │
 ├── DataSet_Training/                              # Data collection, preprocessing, training & analysis
-│   ├── Training-80-20-Final.ipynb                 # Train/test split training and model evaluation
-│   ├── FullDataTrainingFinal.ipynb                # Final training on complete dataset
-│   ├── WEATHER DATA FETCH AND CONVERSION.ipynb    # Fetch and preprocess weather data
-│   ├── SLDC DATA FETCH.ipynb                      # Fetch Delhi electricity demand data
+│   ├── Training-80-20-Final.ipynb                 # Model training using 80-20 train-test split
+│   ├── FullDataTrainingFinal.ipynb                # Final model training on complete dataset
+│   ├── WEATHER DATA FETCH AND CONVERSION.ipynb    # Weather data fetching and preprocessing scripts
+│   ├── SLDC DATA FETCH.ipynb                      # Delhi electricity demand data fetching scripts
 │   ├── Delhi_Weather_5M.csv                       # Processed weather dataset
 │   ├── delhi_sldc_5min_2022_2026.csv              # Electricity demand dataset
 │   └── ...
 │
-└── .python-version                                # Python 3.11 (CatBoost compatibility)
-
+└── .python-version                                # Python 3.11 (required for CatBoost compatibility)
 
 ---
 
