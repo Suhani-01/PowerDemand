@@ -38,7 +38,7 @@ The prediction system uses an *ensemble approach* combining multiple models with
 
 | Details |
 |---------|
-| XGBoos |
+| XGBoost |
 | LightGBM |
 | CatBoos |
 | Ensemble is used with evaluated weight of each model |
