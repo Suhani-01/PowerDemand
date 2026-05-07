@@ -6,12 +6,13 @@ from datetime import datetime, date
 import joblib
 import os
 import time
+import pandas as pd
 
 app = Flask(__name__)
 CORS(app)
 
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
-ARCHIVE_URL  = "https://archive-api.open-meteo.com/v1/archive"
+HISTORICAL_URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 
 REGIONS = ['DELHI', 'BRPL', 'BYPL', 'NDPL', 'NDMC', 'MES']
 
@@ -70,6 +71,8 @@ FEATURES = [
     'Temperature (°C)', 'Relative Humidity (%)', 'feels_like',
     'Precipitation (mm)', 'Wind Speed (m/s)', 'Cloud Cover Total (%)'
 ]
+
+ 
 
 # ─── In-memory weather cache: { date_str: (timestamp, weather_by_hour) } ───
 _weather_cache = {}
@@ -161,109 +164,183 @@ def build_features(dt, weather_row):
         'is_monsoon': int(month in [7, 8, 9]),
         'is_summer':  int(month in [4, 5, 6]),
         'is_winter':  int(month in [10, 11, 12, 1, 2]),
-        'Temperature (°C)':       weather_row.get('temperature_2m',      25.0),
-        'Relative Humidity (%)':  weather_row.get('relative_humidity_2m',60.0),
-        'feels_like':             weather_row.get('apparent_temperature', 25.0),
-        'Precipitation (mm)':     weather_row.get('precipitation',        0.0),
-        'Wind Speed (m/s)':       weather_row.get('wind_speed_10m',       3.0),
-        'Cloud Cover Total (%)':  weather_row.get('cloud_cover',         50.0),
+        'Temperature (°C)': weather_row['temperature_2m'],
+        'Relative Humidity (%)': weather_row['relative_humidity_2m'],
+        'feels_like': weather_row['apparent_temperature'],
+        'Precipitation (mm)': weather_row['precipitation'],
+        'Wind Speed (m/s)': weather_row['wind_speed_10m'],
+        'Cloud Cover Total (%)': weather_row['cloud_cover'],
     }
     return [feat[f] for f in FEATURES]
 
 
 # ─── Weather fetch with caching + retry ─────────────────────────────────────
 
-def _default_weather():
-    """Return sensible Delhi defaults if API fails."""
-    return {h: {
-        'temperature_2m':      25.0,
-        'relative_humidity_2m':60.0,
-        'apparent_temperature':25.0,
-        'precipitation':        0.0,
-        'wind_speed_10m':       3.0,
-        'cloud_cover':         50.0,
-    } for h in range(24)}
-
 
 def fetch_weather(target_date_str: str) -> dict:
     """
-    Fetch hourly weather for a given date (Delhi).
-    - Returns cached result if fresh (< 30 min old).
-    - Decides archive vs forecast based on date.
-    - Retries once on failure, then falls back to defaults.
+    Weather fetching strategy:
+
+    1. If target date is today/future:
+       → use forecast API
+
+    2. If forecast API fails:
+       → use historical API with SAME DATE LAST YEAR
+
+    3. If target date is already past:
+       → directly use historical API
+
+    No CSV fallback.
+    No default weather.
     """
+
     now = time.time()
 
-    # Return from cache if still fresh
+    # cache check
     if target_date_str in _weather_cache:
         cached_at, cached_data = _weather_cache[target_date_str]
+
         if now - cached_at < CACHE_TTL:
             print(f"[weather] cache hit for {target_date_str}")
             return cached_data
 
     target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
-    today       = date.today()
+    today = date.today()
 
-    # archive endpoint only supports up to ~5 days before today
-    # forecast endpoint supports today + 16 days ahead
+    keys = [
+        'temperature_2m',
+        'relative_humidity_2m',
+        'apparent_temperature',
+        'precipitation',
+        'wind_speed_10m',
+        'cloud_cover'
+    ]
+
+    def process_weather_response(data):
+        hourly = data.get('hourly', {})
+        times = hourly.get('time', [])
+
+        if not times:
+            raise ValueError("No hourly weather data")
+
+        weather_by_hour = {}
+
+        for i, t in enumerate(times):
+            hr = int(t.split('T')[1].split(':')[0])
+
+            weather_by_hour[hr] = {
+                k: hourly[k][i]
+                for k in keys
+            }
+
+        return weather_by_hour
+
+    # ─────────────────────────────────────────────
+    # CASE 1 → PAST DATE
+    # ─────────────────────────────────────────────
+
     if target_date < today:
-        url = ARCHIVE_URL
-    else:
-        url = FORECAST_URL
 
-    params = {
-        'latitude':  28.6139,
+        print(f"[weather] using historical API for past date")
+
+        params = {
+            'latitude': 28.6139,
+            'longitude': 77.2090,
+            'hourly':
+                'temperature_2m,relative_humidity_2m,'
+                'apparent_temperature,precipitation,'
+                'wind_speed_10m,cloud_cover',
+            'timezone': 'Asia/Kolkata',
+            'start_date': target_date_str,
+            'end_date': target_date_str,
+        }
+
+        resp = requests.get(HISTORICAL_URL, params=params, timeout=20)
+        resp.raise_for_status()
+
+        weather_by_hour = process_weather_response(resp.json())
+
+        _weather_cache[target_date_str] = (now, weather_by_hour)
+
+        return weather_by_hour
+
+    # ─────────────────────────────────────────────
+    # CASE 2 → TODAY/FUTURE DATE
+    # TRY FORECAST API
+    # ─────────────────────────────────────────────
+
+    forecast_params = {
+        'latitude': 28.6139,
         'longitude': 77.2090,
-        'hourly':    'temperature_2m,relative_humidity_2m,apparent_temperature,'
-                     'precipitation,wind_speed_10m,cloud_cover',
-        'timezone':  'Asia/Kolkata',
+        'hourly':
+            'temperature_2m,relative_humidity_2m,'
+            'apparent_temperature,precipitation,'
+            'wind_speed_10m,cloud_cover',
+        'timezone': 'Asia/Kolkata',
         'start_date': target_date_str,
-        'end_date':   target_date_str,
+        'end_date': target_date_str,
     }
 
-    for attempt in range(3):          # up to 3 attempts
-        try:
-            resp = requests.get(url, params=params, timeout=20)
-            resp.raise_for_status()
-            data = resp.json()
+    try:
 
-            hourly = data.get('hourly', {})
-            times  = hourly.get('time', [])
+        print(f"[weather] trying forecast API")
 
-            if not times:
-                raise ValueError("Empty hourly data returned from Open-Meteo")
+        resp = requests.get(
+            FORECAST_URL,
+            params=forecast_params,
+            timeout=20
+        )
 
-            # Build {hour: {field: value}} dict
-            keys = ['temperature_2m','relative_humidity_2m','apparent_temperature',
-                    'precipitation','wind_speed_10m','cloud_cover']
-            weather_by_hour = {}
-            for i, t in enumerate(times):
-                hr = int(t.split('T')[1].split(':')[0])
-                weather_by_hour[hr] = {
-                    k: (hourly.get(k) or [None]*24)[i] or _default_weather()[0][k]
-                    for k in keys
-                }
+        resp.raise_for_status()
 
-            # Fill any missing hours (should be 0–23)
-            for h in range(24):
-                if h not in weather_by_hour:
-                    weather_by_hour[h] = _default_weather()[h]
+        weather_by_hour = process_weather_response(resp.json())
 
-            # Cache and return
-            _weather_cache[target_date_str] = (now, weather_by_hour)
-            print(f"[weather] fetched {target_date_str} via {url.split('/')[2]} (attempt {attempt+1})")
-            return weather_by_hour
+        _weather_cache[target_date_str] = (now, weather_by_hour)
 
-        except Exception as e:
-            print(f"[weather] attempt {attempt+1} failed for {target_date_str}: {e}")
-            if attempt < 2:
-                time.sleep(1.5 * (attempt + 1))   # back-off: 1.5s, 3s
-            else:
-                print(f"[weather] all attempts failed — using defaults for {target_date_str}")
-                fallback = _default_weather()
-                _weather_cache[target_date_str] = (now, fallback)
-                return fallback
+        return weather_by_hour
 
+    except Exception as e:
+
+        print(f"[weather] forecast failed: {e}")
+
+        # ─────────────────────────────────────────
+        # FALLBACK → SAME DATE LAST YEAR
+        # ─────────────────────────────────────────
+
+        target_dt = datetime.strptime(target_date_str, '%Y-%m-%d')
+
+        last_year_date = target_dt.replace(year=target_dt.year - 1)
+
+        last_year_str = last_year_date.strftime('%Y-%m-%d')
+
+        print(f"[weather] using historical fallback: {last_year_str}")
+
+        historical_params = {
+            'latitude': 28.6139,
+            'longitude': 77.2090,
+            'hourly':
+                'temperature_2m,relative_humidity_2m,'
+                'apparent_temperature,precipitation,'
+                'wind_speed_10m,cloud_cover',
+            'timezone': 'Asia/Kolkata',
+            'start_date': last_year_str,
+            'end_date': last_year_str,
+        }
+
+        hist_resp = requests.get(
+            HISTORICAL_URL,
+            params=historical_params,
+            timeout=20
+        )
+
+        hist_resp.raise_for_status()
+
+        weather_by_hour = process_weather_response(hist_resp.json())
+
+        _weather_cache[target_date_str] = (now, weather_by_hour)
+
+        return weather_by_hour
+    
 
 # ─── Prediction logic ────────────────────────────────────────────────────────
 
@@ -278,7 +355,7 @@ def _run_model(region, feat_arr, wx, hour):
     else:
         base = {'DELHI':3500,'BRPL':900,'BYPL':700,'NDPL':1100,'NDMC':400,'MES':300}
         b    = base.get(region, 1000)
-        temp = wx.get('temperature_2m', 25)
+        temp = wx['temperature_2m']
         temp_factor = 1 + max(0, (temp - 25) * 0.02)
         hour_factor = 0.7 + 0.3 * np.sin(np.pi * (hour - 6) / 12) if 6 <= hour <= 22 else 0.65
         return float(b * hour_factor * temp_factor + np.random.normal(0, 50))
@@ -286,34 +363,34 @@ def _run_model(region, feat_arr, wx, hour):
 
 def predict_for_date(target_date_str: str, region: str,
                      shared_weather: dict = None):
-    """
-    Predict 24-hour demand for one region.
-    If shared_weather is provided (already fetched), skip API call.
-    """
+
     weather_by_hour = shared_weather if shared_weather else fetch_weather(target_date_str)
+
     target_dt = datetime.strptime(target_date_str, '%Y-%m-%d')
 
-    hourly_preds   = []
+    hourly_preds = []
     hourly_weather = []
 
     for hour in range(24):
-        dt  = target_dt.replace(hour=hour)
-        wx  = weather_by_hour.get(hour, _default_weather()[0])
-        fv  = build_features(dt, wx)
+        dt = target_dt.replace(hour=hour)
+        wx = weather_by_hour[hour]
+        fv = build_features(dt, wx)
+
+        # 🔥 if model fails or weak confidence → fallback blend
         pred = _run_model(region, np.array([fv]), wx, hour)
 
         hourly_preds.append(round(pred, 1))
+
         hourly_weather.append({
-            'temp':          round(wx.get('temperature_2m',       25), 1),
-            'humidity':      round(wx.get('relative_humidity_2m', 60), 1),
-            'feels_like':    round(wx.get('apparent_temperature', 25), 1),
-            'precipitation': round(wx.get('precipitation',         0), 2),
-            'wind_speed':    round(wx.get('wind_speed_10m',        3), 1),
-            'cloud_cover':   round(wx.get('cloud_cover',          50), 1),
+            'temp': round(wx['temperature_2m'], 1),
+            'humidity': round(wx['relative_humidity_2m'], 1),
+            'feels_like': round(wx['apparent_temperature'], 1),
+            'precipitation': round(wx['precipitation'], 2),
+            'wind_speed': round(wx['wind_speed_10m'], 1),
+            'cloud_cover': round(wx['cloud_cover'], 1),
         })
 
     return hourly_preds, hourly_weather
-
 
 def build_summary(hourly_preds):
     peak_demand = round(max(hourly_preds), 1)

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
+import { MdMessage } from "react-icons/md";
+
 import {
   AreaChart,
   Area,
@@ -101,6 +103,7 @@ export default function Prediction() {
   const [weather, setWeather] = useState([]); //weather recieved after prediction
   const [weatherSummary,setWeatherSummary]=useState([]); //weather summary recieved after prediction
   const [selectedTableRegion, setSelectedTableRegion] = useState("DELHI"); //selected region for elect demand view
+  const [extraMessage , setExtraMessage]=useState();
 
   function toggleRegion(id) {
     //id->["Delhi","BRPL","BYPL","NDPL" ,"NDMC","MES"]
@@ -151,12 +154,27 @@ export default function Prediction() {
         throw new Error(data.error || "Failed to fetch prediction");
       }
 
+      const selectedDate=new Date(date);
+      const currentDate=new Date();
+
+      const diffInDays=Math.ceil((selectedDate-currentDate)/(1000 * 60 * 60 * 24));
+     
+
+      if(diffInDays>=16){
+        setExtraMessage("Previous year's weather data has been used because forecast weather is only available up to 16 days ahead.");
+      }else if (diffInDays<0) {
+        setExtraMessage("Historical weather data has been used for prediction.");
+      }else{
+        setExtraMessage("");
+      }
+
       setResults(data.results); //region wise prediction per hour
       setWeather(Object.values(data.weather) || []); //weather data returned from the API
       setSelectedTableRegion(selectedRegions[0]); //whos region table to show by default
       setWeatherSummary(data.weather_summary)
     } catch (e) {
-      setError(e.message || "Failed to fetch prediction");
+      console.log(e.message);
+      setError("Failed to fetch prediction");
     } finally {
       setLoading(false);
     }
@@ -309,6 +327,8 @@ export default function Prediction() {
         </div>
       )}
 
+      {(hasResults && extraMessage) && <div className="bg-yellow-100 text-yellow-700 rounded-2xl shadow hover:-translate-y-1 cursor-pointer duration-500 ease-in-out p-4 mx-1 mb-4 flex gap-2 justify-center items-center"><MdMessage className="text-lg" /> {extraMessage}</div>}
+
       {/* Results */}
       {hasResults && (
         <div>
@@ -316,8 +336,33 @@ export default function Prediction() {
           <div className="flex flex-col gap-3 mb-8">
             {selectedRegions.map((r) => {
               const d = results[r];
-              if (!d) return <div>No results for region {r}</div>; 
               const regionMeta = ALL_REGIONS.find((val) => val.id === r);
+              if (!d) return   <div
+                  key={r}
+                  className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+                >
+                  {/* Region header strip */}
+                  <div
+                    className="flex items-center gap-2 px-5 py-2.5 border-b"
+                    style={{ borderBottomColor: regionMeta.color }}
+                  >
+                    <div
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ background: regionMeta.color }}
+                    />
+                    <span className="font-extrabold text-slate-800 text-sm">
+                      {r}
+                    </span>
+                    <span className="text-slate-400 text-xs">
+                      — {regionMeta.label}
+                    </span>
+                  </div>
+                  {/* Stats row */}
+                  <div className="h-20 flex items-center justify-center">
+                      <div className="text-gray-600 flex items-center justify-center mx-3 gap-1 flex-wrap">No prediction for {r} - <button onClick={handlePredict} className="text-blue-600 hover:text-blue-400 underline"> Run Prediction</button> to see the results</div>
+                  </div>
+                </div>
+              
          
               const stats = [
                 {
