@@ -13,6 +13,7 @@ A machine learning-powered web application that predicts electricity demand for 
 
 ## 📁 Project Structure
 
+```
 ├── electricity-demand/
 │   ├── frontend/                                  # React frontend application
 │   └── backend/                                   # Flask backend API server
@@ -27,6 +28,7 @@ A machine learning-powered web application that predicts electricity demand for 
 │   └── ...
 │
 └── .python-version                                # Python 3.11 (required for CatBoost compatibility)
+```
 
 ---
 
@@ -75,19 +77,19 @@ The prediction system uses an *ensemble approach* combining multiple models with
 
 ### Backend Setup
 
-bash
+```
 cd electricity-demand/backend
 pip install -r requirements.txt
 python app.py
-
+```
 
 ### Frontend Setup
 
-bash
+```
 cd electricity-demand/frontend
 npm install
 npm run dev
-
+```
 
 The frontend will start on http://localhost:5173
 
