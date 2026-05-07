@@ -24,7 +24,7 @@ export default function Navbar() {
             </svg>
           </div>
           <div>
-            <div className="font-extrabold text-primary-800 text-base leading-none">PowerPulse</div>
+            <div className="font-extrabold text-primary-800 text-base leading-none">PowerDemand</div>
           </div>
         </button>
 

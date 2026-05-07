@@ -45,7 +45,7 @@ export default function About() {
     <div className="max-w-6xl mx-auto px-6 py-12 page-enter">
       {/* Header */}
       <div className="text-center mb-14">
-        <h1 className="text-4xl font-extrabold text-slate-800 mb-3">About PowerPulse</h1>
+        <h1 className="text-4xl font-extrabold text-slate-800 mb-3">About PowerDemand</h1>
         <p className="text-slate-500 max-w-2xl mx-auto text-lg">
           A machine learning project for short-term electricity demand forecasting across Delhi's power distribution network.
         </p>
