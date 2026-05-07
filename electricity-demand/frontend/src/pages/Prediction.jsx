@@ -16,6 +16,8 @@ import {
 } from "recharts";
 import { MdElectricBolt } from "react-icons/md";
 import { MdError } from "react-icons/md";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 
 const ALL_REGIONS = [
   { id: "DELHI", label: "Delhi (Total)", color: "#2563eb" },
@@ -129,7 +131,8 @@ export default function Prediction() {
     setResults({}); //clear previous results
 
     try {
-      const response = await fetch("/api/predict-multi", {
+      const toCallAPI=`${API_URL}/api/predict-multi`
+      const response = await fetch(toCallAPI, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
