@@ -7,8 +7,6 @@ const timeline = [
   { step: '06', title: 'Live Prediction', desc: 'React frontend sends date + regions, receives 24-hour demand curves, preprocessed weather data, and summary statistics per region.' },
 ]
 
-
-
 // Per-model breakdown
 const fullStats = [
   { region: 'DELHI', model: 'XGB',      mae: '314.43', rmse: '374.77', mape: '8.909', r2: '0.8225', acc: '91.091' },
@@ -42,7 +40,7 @@ const MODEL_COLORS = { XGB: 'text-orange-600', LGB: 'text-green-600', CAT: 'text
 
 export default function About() {
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12 page-enter">
+    <div className="max-w-6xl mx-auto px-6 py-12">
       {/* Header */}
       <div className="text-center mb-14">
         <h1 className="text-4xl font-extrabold text-slate-800 mb-3">About PowerDemand</h1>
@@ -86,8 +84,6 @@ export default function About() {
           ))}
         </div>
       </div>
-
-      
 
       {/* Feature groups */}
       <div>

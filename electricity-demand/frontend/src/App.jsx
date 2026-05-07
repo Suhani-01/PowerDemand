@@ -9,12 +9,12 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 mt-10">
         <Routes>
-          <Route path="/"          element={<Home />} />
-          <Route path="/predict"   element={<Prediction />} />
-          <Route path="/about"     element={<About />} /> 
-          <Route path="/regions"   element={<Regions />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/predict" element={<Prediction />} />
+          <Route path="/about" element={<About />} /> 
+          <Route path="/regions" element={<Regions />} />
         </Routes>
       </main>
     </div>
