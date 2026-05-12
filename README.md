@@ -7,7 +7,7 @@ A machine learning-powered web application that predicts electricity demand for 
 
 ## 🔗 Live Demo
 
-👉 [https://power-demand-fi6iq210t-suhani-01s-projects.vercel.app/](https://power-demand-fi6iq210t-suhani-01s-projects.vercel.app/)
+👉 [https://power-demand.vercel.app/](https://power-demand.vercel.app/)
 
 ---
 
