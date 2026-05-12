@@ -43,7 +43,7 @@ The prediction system uses an *ensemble approach* combining multiple models with
 | CatBoos |
 | Ensemble is used with evaluated weight of each model |
 
-> For specific model details and ensemble weights, visit the [live demo](https://power-demand-fi6iq210t-suhani-01s-projects.vercel.app/).
+> For specific model details and ensemble weights, visit the [live demo](https://power-demand.vercel.app/).
 
 ---
 
