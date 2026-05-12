@@ -69,7 +69,7 @@ export default function Regions() {
           {/* Map image */}
           <div className="lg:w-1/2 bg-slate-900 flex items-center justify-center p-6 min-h-[340px]">
             <img
-              src="/images/map.png"
+              src="/map.png"
               alt="Delhi Power Distribution Map"
               className="max-h-[480px] w-auto rounded-xl object-contain"
               style={{ filter: 'drop-shadow(0 0 20px rgba(0,210,255,0.12))' }}

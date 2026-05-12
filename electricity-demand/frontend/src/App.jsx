@@ -4,6 +4,7 @@ import Home from './pages/Home'
 import Prediction from './pages/Prediction'
 import About from './pages/About' 
 import Regions from './pages/Regions'
+import './index.css'
 
 export default function App() {
   return (

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import axios from "axios";
 import { MdMessage } from "react-icons/md";
 
 import {
@@ -314,7 +313,7 @@ export default function Prediction() {
           <button
             onClick={handlePredict}
             disabled={loading || selectedRegions.length === 0}
-            className="btn-primary flex items-center gap-2 py-3 px-8 justify-center"
+            className=" flex items-center bg-primary-600 text-white font-bold rounded-xl gap-2 py-3 px-8 justify-center"
           >
             {loading ? (
               <>

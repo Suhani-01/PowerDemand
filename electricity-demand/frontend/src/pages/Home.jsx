@@ -76,7 +76,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="page-enter">
+    <div className="animate-[fadeUp_0.3s_ease_both]">
       {/* ════════════════════ HERO ════════════════════ */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#eef2ff] via-[#f0f7ff] to-[#e8f4ff] min-h-[calc(100vh-64px)]">
         {/* Subtle dot-grid bg */}
@@ -120,7 +120,7 @@ export default function Home() {
               <div className="flex flex-wrap gap-3 mb-10">
                 <button
                   onClick={() => navigate("/predict")}
-                  className="btn-primary flex items-center gap-2 px-7 py-3 text-base"
+                  className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-7 py-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-primary-600/25 flex items-center gap-2 text-base"
                 >
                   Start Predicting
                   <MdKeyboardArrowRight className="w-4 h-4" />
@@ -160,7 +160,7 @@ export default function Home() {
             {/* - RIGHT: chart visual - */}
             <div className="flex-1 w-full max-w-lg flex flex-col gap-4">
               {/* Main forecast card */}
-              <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-5 float-card">
+              <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-5 animate-[floatCard_4s_ease-in-out_infinite]">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -277,7 +277,7 @@ export default function Home() {
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-3">
             How It Works
           </h2>
-          <p className="text-slate-500 max-w-xl mx-auto text-sm sm:text-base">
+          <p className="text-slate-500 text-red max-w-xl mx-auto text-sm sm:text-base">
             A production-grade forecasting pipeline built with real Delhi SLDC
             data and advanced ML techniques.
           </p>
@@ -286,8 +286,7 @@ export default function Home() {
           {HOW_IT_WORKS.map((f) => (
             <div
               key={f.step}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 card-glow"
-            >
+              className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"            >
               <span
                 className={`inline-block text-xs font-extrabold px-2.5 py-1 rounded-lg mb-4 ${f.color}`}
               >
@@ -325,8 +324,7 @@ export default function Home() {
               <button
                 key={r.id}
                 onClick={() => navigate("/predict")}
-                className="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-primary-300 rounded-2xl p-3 sm:p-4 text-center transition-all card-glow"
-              >
+                className="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-primary-300 rounded-2xl p-3 sm:p-4 text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"              >
                 <div
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-full mx-auto mb-2 sm:mb-3 flex items-center justify-center text-white font-bold text-xs sm:text-sm"
                   style={{ background: r.color }}
@@ -345,8 +343,7 @@ export default function Home() {
           <div className="text-center mt-6">
             <button
               onClick={() => navigate("/regions")}
-              className="btn-outline text-sm"
-            >
+              className="border-2 border-primary-600 text-primary-600 hover:bg-primary-50 font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 text-sm"            >
               View Detailed Region Info →
             </button>
           </div>

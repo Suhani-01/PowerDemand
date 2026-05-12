@@ -8,36 +8,9 @@ const timeline = [
 ]
 
 // Per-model breakdown
-const fullStats = [
-  { region: 'DELHI', model: 'XGB',      mae: '314.43', rmse: '374.77', mape: '8.909', r2: '0.8225', acc: '91.091' },
-  { region: 'DELHI', model: 'LGB',      mae: '295.71', rmse: '358.98', mape: '8.221', r2: '0.8372', acc: '91.779' },
-  { region: 'DELHI', model: 'CAT',      mae: '318.84', rmse: '378.68', mape: '9.135', r2: '0.8188', acc: '90.865' },
-  { region: 'DELHI', model: 'ENSEMBLE', mae: '307.41', rmse: '366.43', mape: '8.667', r2: '0.8304', acc: '91.333' },
-  { region: 'BRPL',  model: 'XGB',      mae: '144.51', rmse: '163.52', mape: '9.646', r2: '0.7927', acc: '90.354' },
-  { region: 'BRPL',  model: 'LGB',      mae: '144.67', rmse: '164.67', mape: '9.630', r2: '0.7898', acc: '90.370' },
-  { region: 'BRPL',  model: 'CAT',      mae: '144.91', rmse: '167.81', mape: '9.613', r2: '0.7817', acc: '90.387' },
-  { region: 'BRPL',  model: 'ENSEMBLE', mae: '143.87', rmse: '163.34', mape: '9.569', r2: '0.7932', acc: '90.431' },
-  { region: 'BYPL',  model: 'XGB',      mae: '58.70',  rmse: '76.06',  mape: '8.335', r2: '0.8593', acc: '91.665' },
-  { region: 'BYPL',  model: 'LGB',      mae: '57.52',  rmse: '74.22',  mape: '8.269', r2: '0.8660', acc: '91.731' },
-  { region: 'BYPL',  model: 'CAT',      mae: '63.32',  rmse: '80.94',  mape: '9.126', r2: '0.8406', acc: '90.874' },
-  { region: 'BYPL',  model: 'ENSEMBLE', mae: '58.90',  rmse: '75.73',  mape: '8.415', r2: '0.8605', acc: '91.585' },
-  { region: 'NDPL',  model: 'XGB',      mae: '97.12',  rmse: '125.07', mape: '9.336', r2: '0.8198', acc: '90.664' },
-  { region: 'NDPL',  model: 'LGB',      mae: '97.18',  rmse: '125.19', mape: '9.351', r2: '0.8195', acc: '90.649' },
-  { region: 'NDPL',  model: 'CAT',      mae: '97.93',  rmse: '126.44', mape: '9.481', r2: '0.8159', acc: '90.519' },
-  { region: 'NDPL',  model: 'ENSEMBLE', mae: '96.42',  rmse: '124.07', mape: '9.266', r2: '0.8227', acc: '90.734' },
-  { region: 'NDMC',  model: 'XGB',      mae: '26.92',  rmse: '31.55',  mape: '16.493',r2: '0.3560', acc: '83.507' },
-  { region: 'NDMC',  model: 'LGB',      mae: '22.62',  rmse: '28.32',  mape: '13.303',r2: '0.4812', acc: '86.697' },
-  { region: 'NDMC',  model: 'CAT',      mae: '27.37',  rmse: '31.69',  mape: '16.743',r2: '0.3504', acc: '83.257' },
-  { region: 'NDMC',  model: 'ENSEMBLE', mae: '25.65',  rmse: '30.36',  mape: '15.514',r2: '0.4039', acc: '84.486' },
-  { region: 'MES',   model: 'XGB',      mae: '2.54',   rmse: '3.28',   mape: '9.739', r2: '0.8698', acc: '90.261' },
-  { region: 'MES',   model: 'LGB',      mae: '2.53',   rmse: '3.27',   mape: '9.597', r2: '0.8706', acc: '90.403' },
-  { region: 'MES',   model: 'CAT',      mae: '2.44',   rmse: '3.14',   mape: '9.297', r2: '0.8812', acc: '90.703' },
-  { region: 'MES',   model: 'ENSEMBLE', mae: '2.47',   rmse: '3.19',   mape: '9.390', r2: '0.8772', acc: '90.610' },
-]
+ 
 
-const REGIONS = ['DELHI','BRPL','BYPL','NDPL','NDMC','MES']
-const MODEL_COLORS = { XGB: 'text-orange-600', LGB: 'text-green-600', CAT: 'text-yellow-600', ENSEMBLE: 'text-primary-700' }
-
+ 
 export default function About() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
