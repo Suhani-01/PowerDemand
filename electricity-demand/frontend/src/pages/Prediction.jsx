@@ -48,25 +48,25 @@ function formatHour(h) {
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
+  // console.log(payload);
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-slate-100 p-3 text-xs min-w-[140px]">
-      <div className="font-semibold text-slate-700 mb-2">
-        {formatHour(Number(label))}
-      </div>
-      {payload.map((p, i) => (
-        <div key={i} className="flex items-center justify-between gap-3 mb-0.5">
-          <span className="flex items-center gap-1.5">
-            <span
-              className="w-2 h-2 rounded-full flex-shrink-0"
-              style={{ background: p.color }}
-            />
-            <span className="text-slate-500">{p.name}</span>
-          </span>
-          <span className="font-bold text-slate-800">
-            {Number(p.value).toFixed(1)}
-          </span>
-        </div>
-      ))}
+    <div className="bg-white rounded-xl shadow-lg  p-3 text-xs min-w-[140px]">
+       <div>
+        {formatHour(label)}
+       </div>
+
+       <div>
+        {
+          payload.map((data,ind)=>(
+            <div className="flex gap-2 items-center">
+              <span className="h-2 w-2 rounded-full" style={{backgroundColor:data.stroke}}></span>
+              <span className="flex-1">{data.name}</span>
+              <span>{data.value}</span>
+            </div>
+          ))
+        }
+       </div>
+       
     </div>
   );
 };
@@ -128,6 +128,7 @@ export default function Prediction() {
     setSelectedRegions(["DELHI"]);
   }
 
+  // API call for prediction
   async function handlePredict() {
     setLoading(true);
     setError("");
@@ -147,8 +148,8 @@ export default function Prediction() {
       });
 
       const data = await response.json();
-      console.log(`Data recieved for date ${date} : `);
-      console.log(data);
+      // console.log(`Data recieved for date ${date} : `);
+      // console.log(data);
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to fetch prediction");
@@ -169,7 +170,9 @@ export default function Prediction() {
       }
 
       setResults(data.results); //region wise prediction per hour
+      console.log(results)
       setWeather(Object.values(data.weather) || []); //weather data returned from the API
+      console.log(weather);
       setSelectedTableRegion(selectedRegions[0]); //whos region table to show by default
       setWeatherSummary(data.weather_summary)
     } catch (e) {
@@ -180,23 +183,38 @@ export default function Prediction() {
     }
   }
 
-  //mark that w have results now
+  //mark that whether we have results or not ?
   const hasResults = Object.keys(results).length>0?true:false; 
 
   // Build combined demand chart data (all selected regions on same chart)
 
-  //hrr hour pr iterate krke ek array bnaao containing {hour :0/1/2/3 ,region1 :demand , region2 :demand ....}
+  //results hai tho data prepare kro to show on graph
+  //hrr hour pr iterate krke ek array bnaao containing [ { hour :0 , region1 :demand , region2 :demand ....} , {} , {} ]
   const demandChartData = hasResults 
   ? [...Array(24)].map((val,ind)=>{
     const hr=ind;
-    const row={hour:hr};
+    const row={hour:hr}; 
+
+    //for every selected region whats the prediction at hour hr?
     selectedRegions.forEach((r)=>{
       if(results[r]){
-        row[r]=results[r].predictions[hr];
+        row[r]=results[r].predictions[hr]; // {hour : .. , region : 1234MW } add region one by one
       }
     });
     return row;
   }):[];
+
+  // [
+  // {
+  //   hour : 0,
+  //   Delhi : 100,
+  //   BRPL : 90
+  // },
+  // {
+  //   hour : 1,
+  //   Delhi : 120,
+  //   BRPL : 110
+  // }, ]
 
   // Weather chart Data for selected date
   const weatherResult = weather;
@@ -327,6 +345,9 @@ export default function Prediction() {
         </div>
       )}
 
+      {/* Message if loading ... */}
+      {loading && <div className="flex bg-white rounded-2xl shadow-md h-20 bg-  gap-2 items-center justify-center"> <div className="h-6 aspect-square border-4 border-gray-400 border-l-transparent animate-spin rounded-full"></div> <div className="text-gray-400 animate-pulse">Loading...</div></div>}
+
       {(hasResults && extraMessage) && <div className="bg-yellow-100 text-yellow-700 rounded-2xl shadow hover:-translate-y-1 cursor-pointer duration-500 ease-in-out p-4 mx-1 mb-4 flex gap-2 justify-center items-center"><MdMessage className="text-lg" /> {extraMessage}</div>}
 
       {/* Results */}
@@ -337,6 +358,8 @@ export default function Prediction() {
             {selectedRegions.map((r) => {
               const d = results[r];
               const regionMeta = ALL_REGIONS.find((val) => val.id === r);
+
+              // if we dont have results for selected region 
               if (!d) return   <div
                   key={r}
                   className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
@@ -363,7 +386,7 @@ export default function Prediction() {
                   </div>
                 </div>
               
-         
+              // organizing data  of selected region
               const stats = [
                 {
                   label: "Peak Demand",
@@ -486,24 +509,35 @@ export default function Prediction() {
                   24-hour demand (MW) — all selected regions on one chart
                 </p>
 
-                {/* Without it, charts usually need fixed width/height*/}
+                {/* Container that adjusts its width and height based on the size of its parent element */}
                 <ResponsiveContainer width="100%" height={340}>
                   <LineChart data={demandChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <CartesianGrid/> {/* For the background grid */}
+                    
+                    
+                    {/* tickformatter -> a function applied to each axis tick value before displaying it. */}
+                    {/* data key -> data to be used for x axis from the data=demandChartData */}
                     <XAxis
-                      dataKey="hour"
+                      dataKey="hour" 
                       tickFormatter={formatHour}
                       tick={{ fontSize: 11, fill: "#94a3b8" }}
                     />
                     <YAxis
-                      tick={{ fontSize: 11, fill: "#94a3b8" }}
-                  
-                      tickFormatter={(v) => v.toLocaleString()}
+                      tick={{ fontSize: 11, fill: "#94a3b8" }} 
                     />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
+
+                    {/* passes active  -> (bool , to show tooltip or not ?) , payload -> ( nearest y cord data array of the mouse hover ) , label -> whats on x-axis */}
+                    <Tooltip content={<CustomTooltip />} /> 
+                    
+                    {/* to display which line is showing what  */}
+                    <Legend /> 
+
+                    {/* plot line for every selected region */}
                     {selectedRegions.map((r) => {
+                      //preparing  meta data of the region {ie to fetch color}
                       const meta = ALL_REGIONS.find((x) => x.id === r);
+
+                      //datakey prop is used to find the data to plot from the prepared data (demandCharData)
                       return (
                         <Line
                           key={r}
@@ -581,44 +615,7 @@ export default function Prediction() {
                     </p>
                     <ResponsiveContainer width="100%" height={220}>
                       <AreaChart data={weatherChartData}>
-                        <defs>
-                          <linearGradient
-                            id="tempGrad"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="5%"
-                              stopColor="#ef4444"
-                              stopOpacity={0.15}
-                            />
-                            <stop
-                              offset="95%"
-                              stopColor="#ef4444"
-                              stopOpacity={0.01}
-                            />
-                          </linearGradient>
-                          <linearGradient
-                            id="feelGrad"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="5%"
-                              stopColor="#f97316"
-                              stopOpacity={0.12}
-                            />
-                            <stop
-                              offset="95%"
-                              stopColor="#f97316"
-                              stopOpacity={0.01}
-                            />
-                          </linearGradient>
-                        </defs>
+                                         
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                         <XAxis
                           dataKey="hour"
@@ -636,7 +633,7 @@ export default function Prediction() {
                           dataKey="Temperature"
                           stroke="#ef4444"
                           strokeWidth={2}
-                          fill="url(#tempGrad)"
+                          fill="rgba(239,68,68,0.2)"
                           dot={false}
                         />
                         <Area
@@ -644,9 +641,8 @@ export default function Prediction() {
                           dataKey="Feels Like"
                           stroke="#f97316"
                           strokeWidth={2}
-                          strokeDasharray="4 2"
-                          fill="url(#feelGrad)"
-                          dot={false}
+                          fill="rgba(249,115,22,0.2)"
+                          
                         />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -725,19 +721,14 @@ export default function Prediction() {
                       </div>
                       <ResponsiveContainer width="100%" height={180}>
                         <BarChart data={barData}>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#f1f5f9"
-                          />
+                          <CartesianGrid />
                           <XAxis
                             dataKey="hour"
                             tickFormatter={formatHour}
                             tick={{ fontSize: 10, fill: "#94a3b8" }}
                           />
                           <YAxis
-                            tick={{ fontSize: 10, fill: "#94a3b8" }}
-                            width={60}
-                            tickFormatter={(v) => v.toLocaleString()}
+                            tick={{ fontSize: 10, fill: "#94a3b8" }} 
                           />
                           <Tooltip content={<CustomTooltip />} />
                           <Bar
@@ -797,6 +788,8 @@ export default function Prediction() {
                     </tr>
                   </thead>
                   <tbody>
+                    {/* weather => [ {apparent_temperature: 30.7, cloud_cover: 0, precipitation: 0, relative_humidity_2m: 56, temperature_2m: 28.3, …} , {} , {} ..... ] */}
+
                     {weather.map((wx, i) => {
                       
                       const h=i;
@@ -820,9 +813,7 @@ export default function Prediction() {
                             className={`px-4 py-2.5 text-right font-mono bg-slate-200 font-bold ${isPeak ? "text-red-600" : "text-primary-700"}`}
                           >
                             {results[selectedTableRegion]?.predictions[i]?.toLocaleString(
-                              "en-IN",
-                              { maximumFractionDigits: 1 },
-                            )}
+                              "en-IN")}
                           </td>
                           <td className="px-4 py-2.5 text-right text-slate-600 font-mono">
                             {wx.temperature_2m ?? "—"}
@@ -873,6 +864,8 @@ export default function Prediction() {
           </p>
         </div>
       )}
+
+
     </div>
   );
 }

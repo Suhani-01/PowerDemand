@@ -5,17 +5,18 @@ import requests
 from datetime import datetime, date
 import joblib
 import os
-import time
-import pandas as pd
+import time 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app)  # Allow cross-origin requests from frontend
 
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 HISTORICAL_URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 
+# All supported Delhi power distribution regions
 REGIONS = ['DELHI', 'BRPL', 'BYPL', 'NDPL', 'NDMC', 'MES']
 
+# Public holidays in Delhi — used to mark holiday hours as a feature
 DELHI_HOLIDAYS = set([
     '2022-01-26','2022-03-01','2022-03-18','2022-04-10','2022-04-14',
     '2022-04-15','2022-05-03','2022-05-16','2022-07-10','2022-08-09',
@@ -63,6 +64,7 @@ DELHI_HOLIDAYS = set([
     '2026-12-25',  # Christmas
 ])
 
+# Exact feature order that the ML models were trained on — do not change
 FEATURES = [
     'hour', 'day_of_week', 'month', 'year', 'day_of_year', 'week_of_year', 'year_norm',
     'hour_sin', 'hour_cos', 'month_sin', 'month_cos', 'dow_sin', 'dow_cos',
@@ -76,7 +78,7 @@ FEATURES = [
 
 # ─── In-memory weather cache: { date_str: (timestamp, weather_by_hour) } ───
 _weather_cache = {}
-CACHE_TTL = 1800  # 30 minutes — re-fetch if stale
+CACHE_TTL = 1800  # 30 minutes — re-fetch if stale for cache
 
 # Load models
 models = {}
@@ -115,25 +117,38 @@ load_models()
 # ─── Helpers ────────────────────────────────────────────────────────────────
 
 def get_season(month):
-    if month in [4, 5, 6]:        return 'Summer'
-    elif month in [7, 8, 9]:      return 'Monsoon'
-    elif month in [10,11,12,1,2]: return 'Winter'
-    else:                          return 'Spring'
+    # Returns season name based on month 
+    if month in [4, 5, 6]:        
+        return 'Summer'
+    elif month in [7, 8, 9]:      
+        return 'Monsoon'
+    elif month in [10,11,12,1,2]: 
+        return 'Winter'
+    else:                          
+        return 'Spring'
 
 
 def is_morning_peak(hour, season):
-    if season == 'Winter':              return int(9  <= hour <= 11)
-    elif season in ['Summer','Monsoon']:return int(11 <= hour <= 13)
-    else:                               return int(10 <= hour <= 12)
+    # Peak window shifts based on season (winters peak earlier, summers peak later)
+    if season == 'Winter':              
+        return int(9  <= hour <= 11)
+    elif season in ['Summer','Monsoon']:
+        return int(11 <= hour <= 13)
+    else:                               
+        return int(10 <= hour <= 12)
 
 
-def is_evening_peak(hour, season):
-    if season == 'Winter':              return int(17 <= hour <= 19)
-    elif season in ['Summer','Monsoon']:return int(20 <= hour <= 23)
-    else:                               return int(18 <= hour <= 21)
+def is_evening_peak(hour, season): 
+    if season == 'Winter':              
+        return int(17 <= hour <= 19)
+    elif season in ['Summer','Monsoon']:
+        return int(20 <= hour <= 23)
+    else:                               
+        return int(18 <= hour <= 21)
 
 
 def build_features(dt, weather_row):
+    # Build the full feature vector for one datetime + weather combination
     hour     = dt.hour
     dow      = dt.weekday()
     month    = dt.month
@@ -144,19 +159,24 @@ def build_features(dt, weather_row):
     season   = get_season(month)
 
     feat = {
+        # Raw time fields
         'hour': hour,
         'day_of_week': dow,
         'month': month,
         'year': year,
         'day_of_year': doy,
         'week_of_year': woy,
-        'year_norm': (year - 2022) / 5,
+        'year_norm': (year - 2022) / 5,  # Normalize year so model sees a small number
+
+        # Cyclic encoding — sin/cos so model knows hour 23 and hour 0 are close
         'hour_sin':  np.sin(2 * np.pi * hour  / 24),
         'hour_cos':  np.cos(2 * np.pi * hour  / 24),
         'month_sin': np.sin(2 * np.pi * month / 12),
         'month_cos': np.cos(2 * np.pi * month / 12),
         'dow_sin':   np.sin(2 * np.pi * dow   / 7),
         'dow_cos':   np.cos(2 * np.pi * dow   / 7),
+
+        # Demand pattern flags
         'is_morning_peak': is_morning_peak(hour, season),
         'is_evening_peak': is_evening_peak(hour, season),
         'is_weekend': int(dow >= 5),
@@ -164,6 +184,8 @@ def build_features(dt, weather_row):
         'is_monsoon': int(month in [7, 8, 9]),
         'is_summer':  int(month in [4, 5, 6]),
         'is_winter':  int(month in [10, 11, 12, 1, 2]),
+
+        # Weather inputs from Open-Meteo
         'Temperature (°C)': weather_row['temperature_2m'],
         'Relative Humidity (%)': weather_row['relative_humidity_2m'],
         'feels_like': weather_row['apparent_temperature'],
@@ -171,7 +193,7 @@ def build_features(dt, weather_row):
         'Wind Speed (m/s)': weather_row['wind_speed_10m'],
         'Cloud Cover Total (%)': weather_row['cloud_cover'],
     }
-    return [feat[f] for f in FEATURES]
+    return [feat[f] for f in FEATURES]  # Return a list (converting dict to list) in exact order model expects
 
 
 # ─── Weather fetch with caching + retry ─────────────────────────────────────
@@ -196,7 +218,7 @@ def fetch_weather(target_date_str: str) -> dict:
 
     now = time.time()
 
-    # cache check
+    # Return cached result if still fresh (within 30 min)
     if target_date_str in _weather_cache:
         cached_at, cached_data = _weather_cache[target_date_str]
 
@@ -207,6 +229,7 @@ def fetch_weather(target_date_str: str) -> dict:
     target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
     today = date.today()
 
+    # Variables we need from the weather API
     keys = [
         'temperature_2m',
         'relative_humidity_2m',
@@ -217,6 +240,7 @@ def fetch_weather(target_date_str: str) -> dict:
     ]
 
     def process_weather_response(data):
+        # Parse API response into { hour: { variable: value } }
         hourly = data.get('hourly', {})
         times = hourly.get('time', [])
 
@@ -347,24 +371,26 @@ def fetch_weather(target_date_str: str) -> dict:
 def _run_model(region, feat_arr, wx, hour):
     """Run ensemble or mock prediction for one region/hour."""
     if region in models:
+        # Weighted average of all three model predictions
         w = weights[region]
         p_xgb = models[region]['xgb'].predict(feat_arr)[0]
         p_lgb = models[region]['lgb'].predict(feat_arr)[0]
         p_cat = models[region]['cat'].predict(feat_arr)[0]
         return float(w['xgb'] * p_xgb + w['lgb'] * p_lgb + w['cat'] * p_cat)
     else:
+        # No model loaded — return a simple mock based on temp and time of day
         base = {'DELHI':3500,'BRPL':900,'BYPL':700,'NDPL':1100,'NDMC':400,'MES':300}
         b    = base.get(region, 1000)
         temp = wx['temperature_2m']
-        temp_factor = 1 + max(0, (temp - 25) * 0.02)
+        temp_factor = 1 + max(0, (temp - 25) * 0.02)  # Higher temp = higher load
         hour_factor = 0.7 + 0.3 * np.sin(np.pi * (hour - 6) / 12) if 6 <= hour <= 22 else 0.65
         return float(b * hour_factor * temp_factor + np.random.normal(0, 50))
 
 
 def predict_for_date(target_date_str: str, region: str,
                      shared_weather: dict = None):
-
-    weather_by_hour = shared_weather if shared_weather else fetch_weather(target_date_str)
+    # Use provided weather if available, otherwise fetch it
+    weather_by_hour = shared_weather or fetch_weather(target_date_str)
 
     target_dt = datetime.strptime(target_date_str, '%Y-%m-%d')
 
@@ -381,6 +407,7 @@ def predict_for_date(target_date_str: str, region: str,
 
         hourly_preds.append(round(pred, 1))
 
+        # Collect cleaned weather data for this hour
         hourly_weather.append({
             'temp': round(wx['temperature_2m'], 1),
             'humidity': round(wx['relative_humidity_2m'], 1),
@@ -393,6 +420,7 @@ def predict_for_date(target_date_str: str, region: str,
     return hourly_preds, hourly_weather
 
 def build_summary(hourly_preds):
+    # Compute peak, least, average demand from the 24-hour predictions
     peak_demand = round(max(hourly_preds), 1)
     least_demand=round(min(hourly_preds),1);
 
@@ -404,36 +432,6 @@ def build_summary(hourly_preds):
         'avg_demand_mw':    round(sum(hourly_preds) / 24, 1),
         'least_demand_mw':    least_demand,
     }
-
-
-# ─── Routes ─────────────────────────────────────────────────────────────────
-
-
-    """Single-region prediction."""
-    try:
-        body   = request.get_json()
-        target_date = body.get('date')
-        region      = (body.get('region') or 'DELHI').upper()
-
-        if not target_date:
-            return jsonify({'error': 'date is required'}), 400
-        if region not in REGIONS:
-            return jsonify({'error': f'Region must be one of {REGIONS}'}), 400
-
-        hourly_preds, hourly_weather = predict_for_date(target_date, region)
-
-        return jsonify({
-            'date':        target_date,
-            'region':      region,
-            'hours':       list(range(24)),
-            'predictions': hourly_preds,
-            'weather':     hourly_weather,
-            'summary':     build_summary(hourly_preds),
-        })
-
-    except Exception as e:
-        print(f"[predict] error: {e}")
-        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/predict-multi', methods=['POST'])
@@ -450,7 +448,7 @@ def predict_multi():
         if not target_date:
             return jsonify({'error': 'date is required'}), 400
 
-        # Validate regions
+        # Reject unknown region names before doing any work
         invalid = [r for r in req_regions if r.upper() not in REGIONS]
         if invalid:
             return jsonify({'error': f'Unknown regions: {invalid}'}), 400
@@ -489,6 +487,7 @@ def predict_multi():
 
 @app.route('/api/regions', methods=['GET'])
 def get_regions():
+    # Returns all region IDs with human-readable labels
     region_info = {
         'DELHI': 'Delhi (Aggregated)',
         'BRPL':  'BRPL (South & West Delhi)',
@@ -502,10 +501,11 @@ def get_regions():
 
 @app.route('/api/health', methods=['GET'])
 def health():
+    # Quick check — shows loaded models and cached weather dates
     return jsonify({
         'status':        'ok',
         'models_loaded': list(models.keys()),
-        'mock_mode':     len(models) == 0,
+        'mock_mode':     len(models) == 0,  # True if no model files were found on disk
         'cache_entries': list(_weather_cache.keys()),
     })
 
