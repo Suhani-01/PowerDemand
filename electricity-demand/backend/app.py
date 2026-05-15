@@ -412,7 +412,7 @@ def _run_model(region, feat_arr, wx, hour):
 
 def predict_for_date(target_date_str: str, region: str,
                      shared_weather: dict = None):
-    # Use provided weather if available, otherwise fetch it
+    # Use provided weather
     weather_by_hour = shared_weather 
 
     target_dt = datetime.strptime(target_date_str, '%Y-%m-%d')
