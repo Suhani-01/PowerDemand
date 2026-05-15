@@ -15,6 +15,7 @@
 
   --color-slate-500: #64748b;
 
+  /* Font family from google fonts and some default */
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 }
@@ -22,10 +23,7 @@
 * {
   box-sizing: border-box;
 }
-
-html {
-  scroll-behavior: smooth;
-}
+ 
 button{
   cursor: pointer;
 }

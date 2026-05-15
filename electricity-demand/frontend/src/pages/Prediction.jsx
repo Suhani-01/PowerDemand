@@ -230,7 +230,7 @@ export default function Prediction() {
     : [];
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10 page-enter">
+    <div className="max-w-7xl animate-[fadeUp_0.3s_ease] mx-auto px-6 py-10 page-enter">
       {/************** Header ******************/}
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-slate-800 mb-1">

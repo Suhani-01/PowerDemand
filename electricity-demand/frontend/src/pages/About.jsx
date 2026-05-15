@@ -5,15 +5,14 @@ const timeline = [
   { step: '04', title: 'Ensemble Weighting', desc: 'Inverse-MAE weighting on validation set — models with lower error get higher weight in the final ensemble prediction.' },
   { step: '05', title: 'API Integration', desc: 'Flask backend fetches real-time or archive weather from Open-Meteo, builds feature vectors, and runs inference through all 3 models.' },
   { step: '06', title: 'Live Prediction', desc: 'React frontend sends date + regions, receives 24-hour demand curves, preprocessed weather data, and summary statistics per region.' },
-]
+] 
+
+
 
 // Per-model breakdown
- 
-
- 
 export default function About() {
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
+    <div className="animate-[fadeUp_0.3s_ease] max-w-6xl mx-auto px-6 py-12" >
       {/* Header */}
       <div className="text-center mb-14">
         <h1 className="text-4xl font-extrabold text-slate-800 mb-3">About PowerDemand</h1>
@@ -23,12 +22,11 @@ export default function About() {
       </div>
 
       {/* Problem statement */}
-      <div className="bg-gradient-to-r from-primary-700 to-primary-900 text-white rounded-3xl p-10 mb-12 flex flex-col md:flex-row gap-8 items-start">
-        <div className="flex-1">
-          <div className="text-blue-200 text-sm font-bold uppercase tracking-wider mb-3">Problem Statement</div>
+      <div className="bg-linear-to-r from-primary-700 to-primary-900 text-white rounded-3xl p-10 mb-12 flex flex-col md:flex-row gap-8 items-start">
+        <div className="flex-1"> 
           <h2 className="text-2xl font-extrabold mb-4">Why Predict Electricity Demand?</h2>
           <p className="text-blue-100 leading-relaxed">
-            Accurate short-term electricity demand forecasting is critical for grid operators to balance supply,
+            Accurate electricity demand forecasting is critical for grid operators to balance supply,
             prevent blackouts, reduce wastage, and optimize generation dispatch. Delhi's grid is highly sensitive
             to temperature, time of day, season, and holidays — making it an ideal ML problem.
           </p>

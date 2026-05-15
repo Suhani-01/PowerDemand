@@ -76,7 +76,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="animate-[fadeUp_0.3s_ease_both]">
+    <div className="animate-[fadeUp_0.3s_ease]">
       {/* ════════════════════ HERO ════════════════════ */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#eef2ff] via-[#f0f7ff] to-[#e8f4ff] min-h-[calc(100vh-64px)]">
         {/* Subtle dot-grid bg */}
@@ -97,7 +97,7 @@ export default function Home() {
             {/* ── LEFT: Text content ── */}
             <div className="flex-1 max-w-xl">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 bg-white border border-blue-200 text-primary-700 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm mb-6">
+              <div className="inline-flex animate-pulse items-center gap-2 bg-white border border-blue-200 text-primary-700 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm mb-6">
                 <HiBolt className="w-3.5 h-3.5 text-amber-500" />
                 AI-Powered Forecasting
               </div>
@@ -242,7 +242,7 @@ export default function Home() {
                       className="text-[10px] font-medium mt-0.5"
                       style={{ color: r.up ? "#22c55e" : "#ef4444" }}
                     >
-                      {/* {r.up ? '↑' : '↓'} {r.pct} */}
+                    
                     </div>
                   </button>
                 ))}

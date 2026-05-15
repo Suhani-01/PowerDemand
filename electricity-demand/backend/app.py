@@ -148,57 +148,80 @@ def is_evening_peak(hour, season):
 
 
 def build_features(dt, weather_row):
-    # Build the full feature vector for one datetime + weather combination
-    hour     = dt.hour
-    dow      = dt.weekday()
-    month    = dt.month
-    year     = dt.year
-    doy      = dt.timetuple().tm_yday
-    woy      = dt.isocalendar()[1]
-    date_str = dt.strftime('%Y-%m-%d')
-    season   = get_season(month)
+    # Build the full feature vector for one datetime + weather combination.
+    # 'dt' is a Python datetime object; 'weather_row' is a dict/Series of weather data.
 
+    # --- Extract raw time components from the datetime object ---
+    hour     = dt.hour                      # 0–23: which hour of the day
+    dow      = dt.weekday()                 # 0=Monday … 6=Sunday
+    month    = dt.month                     # 1–12
+    year     = dt.year                      # e.g. 2024
+    doy      = dt.timetuple().tm_yday       # 1–366: day within the year (useful for seasonality)
+    woy      = dt.isocalendar()[1]          # ISO week number 1–53 (index [1] picks week; [0]=year, [2]=weekday)
+    date_str = dt.strftime('%Y-%m-%d')      # "YYYY-MM-DD" string — used to look up holidays in a set
+    season   = get_season(month)            # Maps month → 'summer'/'winter'/'monsoon' etc. (helper function)
+
+
+    # ------ Organising features -------
     feat = {
-        # Raw time fields
-        'hour': hour,
-        'day_of_week': dow,
-        'month': month,
-        'year': year,
-        'day_of_year': doy,
+        'hour':         hour,
+        'day_of_week':  dow,
+        'month':        month,
+        'year':         year,
+        'day_of_year':  doy,
         'week_of_year': woy,
-        'year_norm': (year - 2022) / 5,  # Normalize year so model sees a small number
 
-        # Cyclic encoding — sin/cos so model knows hour 23 and hour 0 are close
-        'hour_sin':  np.sin(2 * np.pi * hour  / 24),
+        # Linearly scale year so the model sees a small float (≈0–1) instead of large number like 2024 , 2025
+        'year_norm': (year - 2022) / 5,
+
+        # ── Cyclic (sin/cos) encoding ──────────────────────────────────────────
+        #   sin(2π·x/period) and cos(2π·x/period) together uniquely identify x
+        #   AND wrap around so the last value is geometrically adjacent to the first.
+
+        'hour_sin':  np.sin(2 * np.pi * hour  / 24),   # period = 24 h
         'hour_cos':  np.cos(2 * np.pi * hour  / 24),
-        'month_sin': np.sin(2 * np.pi * month / 12),
+        'month_sin': np.sin(2 * np.pi * month / 12),   # period = 12 months
         'month_cos': np.cos(2 * np.pi * month / 12),
-        'dow_sin':   np.sin(2 * np.pi * dow   / 7),
+        'dow_sin':   np.sin(2 * np.pi * dow   / 7),    # period = 7 days
         'dow_cos':   np.cos(2 * np.pi * dow   / 7),
 
-        # Demand pattern flags
+        # ── Demand-pattern flags (binary / boolean → int) ──────────────────────
+        # Domain knowledge encoded as 0/1 so the model gets an explicit signal
+        # rather than having to rediscover these patterns from raw hours alone.
+
+        # True during the morning electricity peak window (hour & season dependent)
         'is_morning_peak': is_morning_peak(hour, season),
+        # True during the evening electricity peak window
         'is_evening_peak': is_evening_peak(hour, season),
+
+        # 1 if Saturday or Sunday (dow 5 or 6); consumption patterns differ on weekends
         'is_weekend': int(dow >= 5),
+
+        # 1 if this date is a Delhi public holiday (looked up in a pre-built set);
+        # holidays resemble weekends in demand behaviour
         'is_holiday': int(date_str in DELHI_HOLIDAYS),
-        'is_monsoon': int(month in [7, 8, 9]),
-        'is_summer':  int(month in [4, 5, 6]),
-        'is_winter':  int(month in [10, 11, 12, 1, 2]),
 
-        # Weather inputs from Open-Meteo
-        'Temperature (°C)': weather_row['temperature_2m'],
-        'Relative Humidity (%)': weather_row['relative_humidity_2m'],
-        'feels_like': weather_row['apparent_temperature'],
-        'Precipitation (mm)': weather_row['precipitation'],
-        'Wind Speed (m/s)': weather_row['wind_speed_10m'],
-        'Cloud Cover Total (%)': weather_row['cloud_cover'],
+        # Season flags — monsoon/summer/winter drive AC, heating, and lighting loads
+        'is_monsoon': int(month in [7, 8, 9]),           # July–September
+        'is_summer':  int(month in [4, 5, 6]),           # April–June
+        'is_winter':  int(month in [10, 11, 12, 1, 2]),  # Oct–Feb (wraps across year boundary)
+
+        # ---------- Weather inputs (fetched from Open-Meteo API) -----------------
+        # Each key maps directly to a column name the model was trained on.
+        'Temperature (°C)':        weather_row['temperature_2m'],         # Air temp at 2 m height
+        'Relative Humidity (%)':   weather_row['relative_humidity_2m'],   # % humidity at 2 m
+        'feels_like':              weather_row['apparent_temperature'],    # Perceived temp (wind chill / heat index)
+        'Precipitation (mm)':      weather_row['precipitation'],           # Rainfall in the past hour
+        'Wind Speed (m/s)':        weather_row['wind_speed_10m'],          # Wind at 10 m height
+        'Cloud Cover Total (%)':   weather_row['cloud_cover'],             # 0–100 % sky coverage
     }
-    return [feat[f] for f in FEATURES]  # Return a list (converting dict to list) in exact order model expects
+
+    # Flatten the dict into an array using FEATURES  
+    return [feat[f] for f in FEATURES]
+    
 
 
-# ─── Weather fetch with caching + retry ─────────────────────────────────────
-
-
+# ---------- Weather fetch with caching + retry ----------------
 def fetch_weather(target_date_str: str) -> dict:
     """
     Weather fetching strategy:
@@ -390,7 +413,7 @@ def _run_model(region, feat_arr, wx, hour):
 def predict_for_date(target_date_str: str, region: str,
                      shared_weather: dict = None):
     # Use provided weather if available, otherwise fetch it
-    weather_by_hour = shared_weather or fetch_weather(target_date_str)
+    weather_by_hour = shared_weather 
 
     target_dt = datetime.strptime(target_date_str, '%Y-%m-%d')
 

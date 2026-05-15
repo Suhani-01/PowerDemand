@@ -1,45 +1,8 @@
-import { useNavigate } from 'react-router-dom'
-
-
-
-const NEED_POINTS = [
-  {
-    icon: '⚡',
-    title: 'Grid Stability',
-    desc: 'Accurate forecasting allows Delhi\'s grid operators (DTL) to schedule generation dispatch and avoid sudden load imbalances that cause voltage fluctuations or outages.',
-  },
-  {
-    icon: '💰',
-    title: 'Cost Optimization',
-    desc: 'Over/under-procurement of power in short-term markets (IEX) is costly. Precise forecasts reduce expensive last-minute purchases and wasteful over-generation.',
-  },
-  {
-    icon: '🌿',
-    title: 'Renewable Integration',
-    desc: 'Delhi is adding rooftop solar and wind. Knowing net demand helps schedule when to draw from renewables vs thermal plants, maximizing green energy use.',
-  },
-  {
-    icon: '🌡️',
-    title: 'Climate Extremes',
-    desc: '2024 saw Delhi\'s hottest summer on record (49°C). ML models that capture temperature-demand correlation can better anticipate extreme weather events.',
-  },
-  {
-    icon: '📊',
-    title: 'DISCOM Planning',
-    desc: 'Distribution companies (BRPL, BYPL, NDPL) use demand forecasts for substation load management, maintenance scheduling, and capital investment planning.',
-  },
-  {
-    icon: '🏙️',
-    title: 'Smart City Vision',
-    desc: 'Delhi\'s smart grid initiative requires intelligent demand prediction as a foundation layer for automated demand response and dynamic pricing systems.',
-  },
-]
-
 export default function Regions() {
-  const navigate = useNavigate()
+ 
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12 page-enter">
+    <div className="max-w-6xl mx-auto animate-[fadeUp_0.3s_ease] px-6 py-12 page-enter">
       <div className="text-center mb-14">
         <h1 className="text-4xl font-extrabold text-slate-800 mb-3">Delhi Power Distribution Regions</h1>
         <p className="text-slate-500 max-w-2xl mx-auto text-lg">
@@ -131,31 +94,6 @@ export default function Regions() {
       </div>
 
   
-      {/* Need of the project */}
-      <div>
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-extrabold text-slate-800 mb-2">Need of the Project</h2>
-          <p className="text-slate-500 max-w-xl mx-auto">Why short-term electricity demand forecasting matters for Delhi's grid</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {NEED_POINTS.map(n => (
-            <div key={n.title} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm card-glow">
-              <div className="text-3xl mb-3">{n.icon}</div>
-              <h3 className="font-bold text-slate-800 text-lg mb-2">{n.title}</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">{n.desc}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="mt-12 bg-gradient-to-r from-primary-600 to-primary-800 rounded-3xl p-10 text-center text-white">
-          <h3 className="text-2xl font-extrabold mb-3">Start Exploring the Data</h3>
-          <p className="text-blue-100 mb-6">Pick any date and region combination to see the predicted demand curve with weather correlation.</p>
-          <button onClick={() => navigate('/predict')} className="bg-white text-primary-700 hover:bg-blue-50 font-bold px-8 py-3 rounded-xl transition-all shadow-lg">
-            Open Prediction Tool →
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
