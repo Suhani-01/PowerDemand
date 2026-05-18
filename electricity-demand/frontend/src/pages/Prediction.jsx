@@ -421,14 +421,7 @@ export default function Prediction() {
                   unit: "MW",
                   sub: "24-hr average",
                   color: "text-primary-700",
-                },
-                {
-                  label: "Daily Energy",
-                  value: (d.summary.total_demand_mwh / 1000).toFixed(2),
-                  unit: "GWh",
-                  sub: "total consumption",
-                  color: "text-slate-700",
-                },
+                }
               ];
               return (
                 <div
