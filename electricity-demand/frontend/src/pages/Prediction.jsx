@@ -345,7 +345,7 @@ export default function Prediction() {
       )}
 
       {/* Message if loading ... */}
-      {loading && <div className="flex bg-white rounded-2xl shadow-md h-20 bg-  gap-2 items-center justify-center"> <div className="h-6 aspect-square border-4 border-gray-400 border-l-transparent animate-spin rounded-full"></div> <div className="text-gray-400 animate-pulse">Loading...</div></div>}
+      {loading && <div className="flex bg-white rounded-2xl shadow-md h-20 gap-2 items-center justify-center"> <div className="h-6 aspect-square border-4 border-gray-400 border-l-transparent animate-spin rounded-full"></div> <div className="text-gray-400 animate-pulse">Loading...</div></div>}
 
       {(hasResults && extraMessage) && <div className="bg-yellow-100 text-yellow-700 rounded-2xl shadow hover:-translate-y-1 cursor-pointer duration-500 ease-in-out p-4 mx-1 mb-4 flex gap-2 justify-center items-center"><MdMessage className="text-lg" /> {extraMessage}</div>}
 
