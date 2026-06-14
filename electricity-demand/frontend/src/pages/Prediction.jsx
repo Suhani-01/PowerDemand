@@ -446,7 +446,9 @@ export default function Prediction() {
                   </div>
                   {/* Stats row */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-slate-100">
-                    {stats.map((s) => (
+                    {stats.map((s,ind) => {
+                      if(ind==5) return <></>
+                      return (
                       <div key={s.label} className="px-4 py-3">
                         <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
                           {s.label}
@@ -465,7 +467,7 @@ export default function Prediction() {
                           {s.sub}
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
               );
