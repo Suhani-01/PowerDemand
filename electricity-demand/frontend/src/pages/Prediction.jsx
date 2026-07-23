@@ -100,7 +100,7 @@ export default function Prediction() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("demand"); //[Demand Curve , Weather Data , Hourly Bars]
   const [weather, setWeather] = useState([]); //weather recieved after prediction
-  const [weatherSummary,setWeatherSummary]=useState([]); //weather summary recieved after prediction
+   
   const [selectedTableRegion, setSelectedTableRegion] = useState("DELHI"); //selected region for elect demand view
   const [extraMessage , setExtraMessage]=useState();
 
@@ -147,8 +147,8 @@ export default function Prediction() {
       });
 
       const data = await response.json();
-      // console.log(`Data recieved for date ${date} : `);
-      // console.log(data);
+      console.log(`Data recieved for date ${date} : `);
+      console.log(data);
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to fetch prediction");
@@ -169,11 +169,12 @@ export default function Prediction() {
       }
 
       setResults(data.results); //region wise prediction per hour
-      console.log(results)
+     
+
       setWeather(Object.values(data.weather) || []); //weather data returned from the API
-      console.log(weather);
+       
       setSelectedTableRegion(selectedRegions[0]); //whos region table to show by default
-      setWeatherSummary(data.weather_summary)
+     
     } catch (e) {
       console.log(e.message);
       setError("Failed to fetch prediction");
@@ -554,52 +555,7 @@ export default function Prediction() {
               <div>
       
 
-                {/* Preprocessed weather summary cards */}
-                {weatherSummary && (
-                  <div className="mb-6">
-                    <p className="text-xs text-slate-400 mb-3 font-semibold uppercase tracking-wide">
-                       Weather Summary  
-                    </p>
-                    <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-5">
-                      {WEATHER_FIELDS.map((f) => {
-                        const vals =weatherSummary
-                          .map((w) => w[f.key])
-                          .filter((v) => v != null);
-                        const avg = vals.length
-                          ? (
-                              vals.reduce((a, b) => a + b, 0) / vals.length
-                            ).toFixed(1)
-                          : "—";
-                        const min = vals.length
-                          ? Math.min(...vals).toFixed(1)
-                          : "—";
-                        const max = vals.length
-                          ? Math.max(...vals).toFixed(1)
-                          : "—";
-                        return (
-                          <div
-                            key={f.key}
-                            className="bg-slate-50 rounded-xl p-3 border border-slate-100"
-                          >
-                            <div className="text-lg mb-1">{f.icon}</div>
-                            <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">
-                              {f.label}
-                            </div>
-                            <div className="text-base font-extrabold text-slate-700">
-                              {avg}
-                              <span className="text-xs font-normal text-slate-400 ml-0.5">
-                                {f.unit}
-                              </span>
-                            </div>
-                            <div className="text-[10px] text-slate-400">
-                              {min}–{max} {f.unit}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+               
 
                 {/* Weather charts */}
                 <div className="space-y-6">
