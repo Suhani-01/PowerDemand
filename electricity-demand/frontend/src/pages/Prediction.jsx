@@ -138,6 +138,7 @@ export default function Prediction() {
     setError("");
     setResults({}); //clear previous results
     const timer = setTimeout(()=>{
+      console.log("It's taking too long for server to respond");
       setServerReady(false);
     },3000);
 
