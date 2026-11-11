@@ -47,6 +47,8 @@ function formatHour(h) {
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
+
+  
   // console.log(payload);
   return (
     <div className="bg-white rounded-xl shadow-lg  p-3 text-xs min-w-[140px]">
@@ -92,6 +94,8 @@ function WeatherCard({ hour, wx }) {
 }
 
 export default function Prediction() {
+  const [serverReady,setServerReady] = useState(true);
+
   const today = new Date().toISOString().split("T")[0]; //"2026-05-07T10:15:30.000Z" ---> "2026-05-07" 
   const [date, setDate] = useState(today);  //For date input
   const [selectedRegions, setSelectedRegions] = useState(["DELHI"]);
@@ -126,12 +130,16 @@ export default function Prediction() {
   function clearAll() {
     setSelectedRegions(["DELHI"]);
   }
+ 
 
   // API call for prediction
   async function handlePredict() {
     setLoading(true);
     setError("");
     setResults({}); //clear previous results
+    const timer = setTimeout(()=>{
+      setServerReady(false);
+    },3000);
 
     try {
       const toCallAPI=`${API_URL}/api/predict-multi`
@@ -180,6 +188,8 @@ export default function Prediction() {
       setError("Failed to fetch prediction");
     } finally {
       setLoading(false);
+      setServerReady(true);
+      clearTimeout(timer);
     }
   }
 
@@ -345,9 +355,13 @@ export default function Prediction() {
         </div>
       )}
 
+      {/* Server is taking long to respond */}
+      {!serverReady && <div className=" text-yellow-700 text-center shadow bg-red-50 rounded-2xl px-2 py-8 mb-6">Server was sleeping and is waking up. This can take up to a minute on the first request.</div>}
+
       {/* Message if loading ... */}
       {loading && <div className="flex bg-white rounded-2xl shadow-md h-20 gap-2 items-center justify-center"> <div className="h-6 aspect-square border-4 border-gray-400 border-l-transparent animate-spin rounded-full"></div> <div className="text-gray-400 animate-pulse">Loading...</div></div>}
 
+      
       {(hasResults && extraMessage) && <div className="bg-yellow-100 text-yellow-700 rounded-2xl shadow hover:-translate-y-1 cursor-pointer duration-500 ease-in-out p-4 mx-1 mb-4 flex gap-2 justify-center items-center"><MdMessage className="text-lg" /> {extraMessage}</div>}
 
       {/* Results */}
