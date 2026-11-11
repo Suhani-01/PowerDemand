@@ -21,25 +21,6 @@ export default function About() {
         </p>
       </div>
 
-      {/* Problem statement */}
-      <div className="bg-linear-to-r from-primary-700 to-primary-900 text-white rounded-3xl p-10 mb-12 flex flex-col md:flex-row gap-8 items-start">
-        <div className="flex-1"> 
-          <h2 className="text-2xl font-extrabold mb-4">Why Predict Electricity Demand?</h2>
-          <p className="text-blue-100 leading-relaxed">
-            Accurate electricity demand forecasting is critical for grid operators to balance supply,
-            prevent blackouts, reduce wastage, and optimize generation dispatch. Delhi's grid is highly sensitive
-            to temperature, time of day, season, and holidays — making it an ideal ML problem.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-4 flex-shrink-0">
-          {[['4 Years','of training data'],['26','input features'],['5','distribution zones'],['3 Models','in ensemble']].map(([v,l]) => (
-            <div key={l} className="bg-white/10 rounded-2xl p-4 text-center">
-              <div className="text-2xl font-extrabold text-amber-300">{v}</div>
-              <div className="text-blue-200 text-xs mt-1">{l}</div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Pipeline */}
       <div className="mb-14">

@@ -64,7 +64,7 @@ DELHI_HOLIDAYS = set([
     '2026-12-25',  # Christmas
 ])
 
-# Exact feature order that the ML models were trained on — do not change
+# Exact feature order that the ML models were trained on  
 FEATURES = [
     'hour', 'day_of_week', 'month', 'year', 'day_of_year', 'week_of_year', 'year_norm',
     'hour_sin', 'hour_cos', 'month_sin', 'month_cos', 'dow_sin', 'dow_cos',
